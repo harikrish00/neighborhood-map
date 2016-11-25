@@ -1,3 +1,20 @@
+var geocoder;
+var map;
+var infowindow;
+
+function initMap(){
+     infowindow = new google.maps.InfoWindow({
+      content: contentString
+    });
+    var latlng = new google.maps.LatLng(-34.397, 150.644);
+    var mapOptions = {
+      zoom: 13,
+      center: latlng
+    }
+    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+    ko.applyBindings(new viewModel());
+}
+
 var locations = [
     {
       businessName: "Umai Umai",
@@ -78,11 +95,27 @@ var locations = [
     }
   ];
 
+var Location = function(data){
+  this.businessName = data.businessName;
+  this.address = data.address;
+  this.category = data.category;
+  this.latlng = { lat: data.lat, lng: data.lng };
+  this.marker = new google.maps.Marker({
+      position: this.latlng,
+      map: map,
+      animation: google.maps.Animation.DROP
+  });
+  this.marker.addListener('click', toggleBounce);
+  this.marker.addListener('click', function(){
+    infowindow.open(map, this.marker);
+  });
+}
+
 var viewModel = function(){
   var self = this;
   this.locationList = ko.observableArray([]);
   locations.forEach(function(data){
-    self.locationList.push(data);
+    self.locationList.push(new Location(data));
   });
   this.query = ko.observable('');
   addMarkers(self.locationList());
@@ -100,9 +133,7 @@ var viewModel = function(){
   });
 }
 
-var geocoder;
-var map;
-var markers = [];
+
 var contentString = '<div id="content">'+
     '<div id="siteNotice">'+
     '</div>'+
@@ -123,20 +154,6 @@ var contentString = '<div id="content">'+
     '(last visited June 22, 2009).</p>'+
     '</div>'+
     '</div>';
-var infowindow;
-
-function initMap(){
-     infowindow = new google.maps.InfoWindow({
-      content: contentString
-    });
-    var latlng = new google.maps.LatLng(-34.397, 150.644);
-    var mapOptions = {
-      zoom: 13,
-      center: latlng
-    }
-    map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    ko.applyBindings(new viewModel());
-}
 
 function findLocationCoordinates(){
   geocoder = new google.maps.Geocoder();
@@ -153,7 +170,6 @@ function findLocationCoordinates(){
 
 function addMarkers(locationList){
     locationList.forEach(function(loc){
-          var myLatLng = {lat: loc.lat, lng: loc.lng};
           map.setCenter(myLatLng);
           var marker = new google.maps.Marker({
               position: myLatLng,
@@ -183,8 +199,8 @@ function addMarkers(locationList){
 
 // Set map object on all the markers
 function setMapOnAll(map){
-  markers.forEach(function(marker){
-    marker.setMap(map);
+  viewModel.locationList.forEach(function(){
+    this.marker.setMap(map);
   });
 }
 
