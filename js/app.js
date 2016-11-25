@@ -97,6 +97,7 @@ var locations = [
     }
   ];
 
+var markers = [];
 var Location = function(data){
   this.businessName = data.businessName;
   this.address = data.address;
@@ -111,26 +112,48 @@ var Location = function(data){
   this.marker.addListener('click', function(){
     infowindow.open(map, this.marker);
   });
+  markers.push(this.marker);
 }
 
 function ViewModel(){
   var self = this;
+  this.setMapOnAll = function(map) {
+    console.log(self.locationList().length);
+    self.locationList().forEach(function(loc){
+      loc.marker.setMap(map);
+      console.log(loc.marker.map);
+    });
+  }
+
+  // Show all the markers on the map by setting map object
+  this.showMarkers = function() {
+    console.log("show markers");
+    map.setCenter({lat: 39.953, lng: -75.140});
+    self.setMapOnAll(map);
+  }
+
+  // Function to clear markers on the map by setting map to null on all markers
+  this.clearMarkers = function(){
+    self.setMapOnAll(null);
+    markers = [];
+  }
+
   this.locationList = ko.observableArray([]);
   locations.forEach(function(data){
     self.locationList.push(new Location(data));
-  });
-  showMarkers();
+  }, this);
+  self.showMarkers();
   this.query = ko.observable('');
   this.query.subscribe(function(value){
     self.locationList.removeAll();
+    self.clearMarkers();
     locations.forEach(function(loc){
       if(loc.businessName.toLowerCase().indexOf(value.toLowerCase()) >= 0 ||
       loc.address.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
         self.locationList.push(new Location(loc));
       }
     });
-    clearMarkers();
-    showMarkers();
+    self.showMarkers();
   });
 }
 
@@ -170,20 +193,20 @@ function toggleBounce(){
 }
 
 
-// Set map object on all the markers
-function setMapOnAll(map){
-  vm.locationList().forEach(function(loc){
-    loc.marker.setMap(map);
-  });
-}
-
-// Show all the markers on the map by setting map object
-function showMarkers(){
-  map.setCenter({lat: 39.953, lng: -75.140});
-  setMapOnAll(map);
-}
-
-// Function to clear markers on the map by setting map to null on all markers
-function clearMarkers(){
-  setMapOnAll(null);
-}
+// // Set map object on all the markers
+// function setMapOnAll(map){
+//   vm.locationList().forEach(function(loc){
+//     loc.marker.setMap(map);
+//   });
+// }
+//
+// // Show all the markers on the map by setting map object
+// function showMarkers(){
+//   map.setCenter({lat: 39.953, lng: -75.140});
+//   setMapOnAll(map);
+// }
+//
+// // Function to clear markers on the map by setting map to null on all markers
+// function clearMarkers(){
+//   setMapOnAll(null);
+// }
