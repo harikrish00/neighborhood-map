@@ -1,6 +1,7 @@
 var geocoder;
 var map;
 var infowindow;
+var vm;
 
 function initMap(){
      infowindow = new google.maps.InfoWindow({
@@ -12,7 +13,8 @@ function initMap(){
       center: latlng
     }
     map = new google.maps.Map(document.getElementById('map'), mapOptions);
-    ko.applyBindings(new viewModel());
+    vm = new ViewModel();
+    ko.applyBindings(vm);
 }
 
 var locations = [
@@ -111,25 +113,24 @@ var Location = function(data){
   });
 }
 
-var viewModel = function(){
+function ViewModel(){
   var self = this;
   this.locationList = ko.observableArray([]);
   locations.forEach(function(data){
     self.locationList.push(new Location(data));
   });
+  showMarkers();
   this.query = ko.observable('');
-  addMarkers(self.locationList());
   this.query.subscribe(function(value){
     self.locationList.removeAll();
     locations.forEach(function(loc){
       if(loc.businessName.toLowerCase().indexOf(value.toLowerCase()) >= 0 ||
       loc.address.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
-        self.locationList.push(loc);
+        self.locationList.push(new Location(loc));
       }
     });
     clearMarkers();
-    deleteMarkers();
-    addMarkers(self.locationList());
+    showMarkers();
   });
 }
 
@@ -155,67 +156,34 @@ var contentString = '<div id="content">'+
     '</div>'+
     '</div>';
 
-function findLocationCoordinates(){
-  geocoder = new google.maps.Geocoder();
-  locations.forEach(function(loc){
-    geocoder.geocode( { 'address': loc.address}, function(results, status) {
-      if (status == 'OK') {
-        alert(loc.businessName + "," + results[0].geometry.location);
-      } else {
-        alert('Geocode was not successful for the following reason: ' + status);
-      }
-    });
-  });
-};
 
-function addMarkers(locationList){
-    locationList.forEach(function(loc){
-          map.setCenter(myLatLng);
-          var marker = new google.maps.Marker({
-              position: myLatLng,
-              map: map,
-              animation: google.maps.Animation.DROP
-          });
-          marker.addListener('click', toggleBounce);
-          marker.addListener('click', function(){
-            infowindow.open(map, marker);
-          });
-          markers.push(marker);
-      });
+function toggleBounce(){
+  var self = this;
+  if (this.getAnimation() !== null){
+    this.setAnimation(null);
+  } else {
+    this.setAnimation(google.maps.Animation.BOUNCE);
+    setTimeout(function(){
+      self.setAnimation(null);
+    }, 2500)
   }
-
-  function toggleBounce(){
-    var self = this;
-    if (this.getAnimation() !== null){
-      this.setAnimation(null);
-    } else {
-      this.setAnimation(google.maps.Animation.BOUNCE);
-      setTimeout(function(){
-        self.setAnimation(null);
-      }, 2500)
-    }
-  }
+}
 
 
 // Set map object on all the markers
 function setMapOnAll(map){
-  viewModel.locationList.forEach(function(){
-    this.marker.setMap(map);
+  vm.locationList().forEach(function(loc){
+    loc.marker.setMap(map);
   });
 }
 
 // Show all the markers on the map by setting map object
 function showMarkers(){
+  map.setCenter({lat: 39.953, lng: -75.140});
   setMapOnAll(map);
 }
 
 // Function to clear markers on the map by setting map to null on all markers
 function clearMarkers(){
   setMapOnAll(null);
-}
-
-//clear marker on the map and delete it
-function deleteMarkers() {
-  clearMarkers();
-  markers = [];
 }
