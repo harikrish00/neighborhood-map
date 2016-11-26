@@ -2,11 +2,11 @@ var geocoder;
 var map;
 var infowindow;
 var vm;
+var client_id = 'QPNBJRUTQQUWJ320EPK5KSQK3NOUKLIGG2WM2F2AYLVV0XYI';
+var client_secret = 'RYENOEUHWVDNZ2VPCOT1UXDV3I4EHRW5YPEKQG40U2WMV0TK';
+var contentString = '';
 
 function initMap(){
-     infowindow = new google.maps.InfoWindow({
-      content: contentString
-    });
     var latlng = new google.maps.LatLng(-34.397, 150.644);
     var mapOptions = {
       zoom: 13,
@@ -99,6 +99,7 @@ var locations = [
 
 var markers = [];
 var Location = function(data){
+  var self = this;
   this.businessName = data.businessName;
   this.address = data.address;
   this.category = data.category;
@@ -110,24 +111,79 @@ var Location = function(data){
   });
   this.marker.addListener('click', toggleBounce);
   this.marker.addListener('click', function(){
-    infowindow.open(map, this.marker);
+    self.buildInfo();
+  });
+  this.glyphicon = ko.computed(function() {
+    switch(self.category){
+      case "Food":
+        return "glyphicon glyphicon-cutlery";
+      case "Coffee":
+        return "glyphicon glyphicon-barcode";
+      case "Pubs":
+        return "glyphicon glyphicon-glass";
+      case "Entertainment":
+        return "glyphicon glyphicon-music";
+      default:
+        return "glyphicon glyphicon-map-marker";
+    }
   });
   markers.push(this.marker);
 }
 
+
+Location.prototype.buildInfo = function(marker){
+  var self = this;
+  var picSize = '250x250';
+  var latlng = this.latlng.lat + ',' + this.latlng.lng
+  var venue_search_url = `https://api.foursquare.com/v2/venues/search?ll=${latlng}&client_id=` +
+  client_id + '&client_secret=' + client_secret + '&v=20161125';
+  console.log(venue_search_url);
+
+  var venue_photo_url = 'https://api.foursquare.com/v2/venues/{{venue_id}}' +
+  '/photos?client_id=' + client_id + '&client_secret=' + client_secret + '&v=20161125';
+
+  $.ajax({
+    url: venue_search_url
+  }).done( function ( msg ) {
+    venues = msg.response.venues;
+    venues.forEach(function (venue) {
+      if(venue.name.indexOf(self.businessName) >= 0){
+        venue_photo_url = venue_photo_url.replace(/{{venue_id}}/g,venue.id);
+        $.ajax({
+          url: venue_photo_url
+        }).done( function (msg) {
+          var photo = msg.response.photos.items[0];
+          var photo_url = photo.prefix + picSize + photo.suffix;
+          contentString = '<div id="content">'+
+              '<div id="siteNotice">'+
+              '</div>'+
+              `<h3 id="firstHeading" class="firstHeading">${self.businessName}</h3>`+
+              '<div id="bodyContent">'+
+              `<img src="${photo_url}" alt="restaurant pic" />` +
+              `<a href=${venue.url}></a>` +
+              '</div>'+
+              '</div>';
+              infowindow = new google.maps.InfoWindow({
+               content: contentString
+              });
+              infowindow.open(map, self.marker, self);
+        })
+      }
+    })
+  });
+
+ }
+
 function ViewModel(){
   var self = this;
   this.setMapOnAll = function(map) {
-    console.log(self.locationList().length);
     self.locationList().forEach(function(loc){
       loc.marker.setMap(map);
-      console.log(loc.marker.map);
     });
   }
 
   // Show all the markers on the map by setting map object
   this.showMarkers = function() {
-    console.log("show markers");
     map.setCenter({lat: 39.953, lng: -75.140});
     self.setMapOnAll(map);
   }
@@ -145,8 +201,8 @@ function ViewModel(){
   self.showMarkers();
   this.query = ko.observable('');
   this.query.subscribe(function(value){
-    self.locationList.removeAll();
     self.clearMarkers();
+    self.locationList.removeAll();
     locations.forEach(function(loc){
       if(loc.businessName.toLowerCase().indexOf(value.toLowerCase()) >= 0 ||
       loc.address.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
@@ -156,29 +212,6 @@ function ViewModel(){
     self.showMarkers();
   });
 }
-
-
-var contentString = '<div id="content">'+
-    '<div id="siteNotice">'+
-    '</div>'+
-    '<h1 id="firstHeading" class="firstHeading">Uluru</h1>'+
-    '<div id="bodyContent">'+
-    '<p><b>Uluru</b>, also referred to as <b>Ayers Rock</b>, is a large ' +
-    'sandstone rock formation in the southern part of the '+
-    'Northern Territory, central Australia. It lies 335&#160;km (208&#160;mi) '+
-    'south west of the nearest large town, Alice Springs; 450&#160;km '+
-    '(280&#160;mi) by road. Kata Tjuta and Uluru are the two major '+
-    'features of the Uluru - Kata Tjuta National Park. Uluru is '+
-    'sacred to the Pitjantjatjara and Yankunytjatjara, the '+
-    'Aboriginal people of the area. It has many springs, waterholes, '+
-    'rock caves and ancient paintings. Uluru is listed as a World '+
-    'Heritage Site.</p>'+
-    '<p>Attribution: Uluru, <a href="https://en.wikipedia.org/w/index.php?title=Uluru&oldid=297882194">'+
-    'https://en.wikipedia.org/w/index.php?title=Uluru</a> '+
-    '(last visited June 22, 2009).</p>'+
-    '</div>'+
-    '</div>';
-
 
 function toggleBounce(){
   var self = this;
@@ -191,22 +224,3 @@ function toggleBounce(){
     }, 2500)
   }
 }
-
-
-// // Set map object on all the markers
-// function setMapOnAll(map){
-//   vm.locationList().forEach(function(loc){
-//     loc.marker.setMap(map);
-//   });
-// }
-//
-// // Show all the markers on the map by setting map object
-// function showMarkers(){
-//   map.setCenter({lat: 39.953, lng: -75.140});
-//   setMapOnAll(map);
-// }
-//
-// // Function to clear markers on the map by setting map to null on all markers
-// function clearMarkers(){
-//   setMapOnAll(null);
-// }

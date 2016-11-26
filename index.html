@@ -46,7 +46,8 @@
         </div>
         <ul data-bind="foreach: locationList" class="list-group">
           <li class="list-group-item">
-              <strong data-bind="text: businessName"></strong>
+            <i data-bind="css: glyphicon"></i>
+              <strong data-bind="text: businessName" class="locationHeading"></strong>
               <div data-bind="text: address"></div>
           </li>
         </ul>
