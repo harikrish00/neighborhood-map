@@ -1,6 +1,9 @@
 # neighborhood-map
 Map and points of interest of my neighborhood Philadelphia, PA.
 
+# App is Live Here
+[my-philly](https://myphilly.herokuapp.com/)
+
 # APIs Used
 
 - Google Maps
@@ -21,3 +24,7 @@ Map and points of interest of my neighborhood Philadelphia, PA.
 - jQuery
 - jQuery-UI
 - Knockout JS
+
+# Setup Instruction
+1. Clone the app
+2. Open index.html page
