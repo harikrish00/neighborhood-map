@@ -1,3 +1,12 @@
 .locationHeading {
   color: #8a2be2;
   }
+
+.checkbox>label, .radio>label{
+  margin-right: 5px;
+  margin-bottom: 15px !important;
+}
+
+.checkbox>label>i{
+  margin-right: 3px;
+}

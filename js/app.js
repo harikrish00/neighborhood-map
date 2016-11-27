@@ -158,9 +158,9 @@ Location.prototype.buildInfo = function(marker){
               '<div id="siteNotice">'+
               '</div>'+
               `<h3 id="firstHeading" class="firstHeading">${self.businessName}</h3>`+
+              `<div style="color: grey; font-size: 14px;">${venue.categories[0].name}</div>` +
               '<div id="bodyContent">'+
               `<img src="${photo_url}" alt="restaurant pic" />` +
-              `<a href=${venue.url}></a>` +
               '</div>'+
               '</div>';
               infowindow = new google.maps.InfoWindow({
@@ -173,6 +173,8 @@ Location.prototype.buildInfo = function(marker){
   });
 
  }
+
+var categories = ['All','Entertainment','Pubs','Coffee','Food']
 
 function ViewModel(){
   var self = this;
@@ -194,12 +196,34 @@ function ViewModel(){
     markers = [];
   }
 
+  this.resetLocation = function(){
+    locations.forEach(function(data){
+      self.locationList.push(new Location(data));
+    }, this);
+    self.showMarkers();
+  };
+
   this.locationList = ko.observableArray([]);
-  locations.forEach(function(data){
-    self.locationList.push(new Location(data));
-  }, this);
-  self.showMarkers();
+  this.filter = ko.observable('Test');
+
+  this.resetLocation();
   this.query = ko.observable('');
+  this.filter = ko.observable('All');
+  this.filter.subscribe(function(value){
+    if(value !== 'All'){
+      self.clearMarkers();
+      self.locationList.removeAll();
+      locations.forEach(function(loc){
+        if(loc.category.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
+          self.locationList.push(new Location(loc));
+        }
+      });
+      self.showMarkers();
+    } else {
+      self.resetLocation();
+    }
+  });
+
   this.query.subscribe(function(value){
     self.clearMarkers();
     self.locationList.removeAll();

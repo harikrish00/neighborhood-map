@@ -44,12 +44,35 @@
         <div class="form-group">
           <input type="textfield" placeholder="type your search .." data-bind="value: query, valueUpdate: 'keyup'" autocomplete="off" class="form-control"/>
         </div>
+        <div class="container-fluid well">
+          <div class="radio">
+            <label>
+              <input type="radio" value="All" data-bind="checked:filter">
+              <i class="glyphicon glyphicon-map-marker"></i>All
+            </label>
+            <label>
+              <input type="radio" value="Food" data-bind="checked:filter">
+              <i class="glyphicon glyphicon-cutlery"></i>Food
+            </label>
+            <label>
+              <input type="radio" value="Entertainment" data-bind="checked:filter">
+              <i class="glyphicon glyphicon-music"></i>Entertainment
+            </label>
+            <label>
+              <input type="radio" value="Pubs" data-bind="checked:filter">
+              <i class="glyphicon glyphicon-glass"></i>Bar
+            </label>
+            <label>
+              <input type="radio" value="Coffee" data-bind="checked:filter">
+              <i class="glyphicon glyphicon-barcode"></i>Coffee
+            </label>
+          </div>
+        </div>
         <ul data-bind="foreach: locationList" class="list-group">
           <li class="list-group-item">
             <i data-bind="css: glyphicon"></i>
               <strong data-bind="text: businessName" class="locationHeading"></strong>
               <div data-bind="text: address"></div>
-          </li>
         </ul>
       </div>
       <div class="col-md-8">
