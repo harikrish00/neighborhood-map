@@ -2,11 +2,18 @@
   color: #8a2be2;
   }
 
-.checkbox>label, .radio>label{
+.radio>label, .radio>label{
   margin-right: 5px;
   margin-bottom: 15px !important;
 }
 
-.checkbox>label>i{
+.radio>label>i{
   margin-right: 3px;
 }
+
+#feedback { font-size: 1.4em; }
+#selectable .ui-selecting { background: #98cbe4; }
+#selectable .ui-selected { background: #63b2d8; color: white; }
+
+#selectable{height:400px;}
+#selectable{overflow:hidden; overflow-y:scroll;}
