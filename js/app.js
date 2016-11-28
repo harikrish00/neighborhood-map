@@ -13,7 +13,7 @@ var client_secret = 'RYENOEUHWVDNZ2VPCOT1UXDV3I4EHRW5YPEKQG40U2WMV0TK';
 var contentString = '';
 var markers = [];
 var redIconUrl = 'https://www.google.com/mapfiles/marker.png';
-var greenIconUrl = 'https://www.google.com/mapfiles/marker_green.png'
+var greenIconUrl = 'https://www.google.com/mapfiles/marker_green.png';
 
 // callback method to google map api to initiate the map
 function initMap() {
@@ -21,7 +21,7 @@ function initMap() {
     var mapOptions = {
         zoom: 13,
         center: latlng
-    }
+    };
     map = new google.maps.Map(document.getElementById('map'), mapOptions);
     vm = new ViewModel();
     infowindow = new google.maps.InfoWindow({
@@ -120,8 +120,8 @@ var Location = function(data) {
         icon: redIconUrl
     });
     this.marker.addListener('click', function() {
-        resetMarkerIcon()
-        setGreenIcon(this)
+        resetMarkerIcon();
+        setGreenIcon(this);
         self.buildInfo();
     });
     markers.push(this.marker);
@@ -140,32 +140,32 @@ var Location = function(data) {
                 return "glyphicon glyphicon-map-marker";
         }
     });
-}
+};
 
 /* prototype function shared by all the location objects to build info about the
  locations stored */
 Location.prototype.buildInfo = function(marker) {
     var self = this;
     var picSize = '250x250';
-    var latlng = this.latlng.lat + ',' + this.latlng.lng
-    var venue_search_url = `https://api.foursquare.com/v2/venues/search?ll=${latlng}` +
+    var latlng = this.latlng.lat + ',' + this.latlng.lng;
+    var venueSearchUrl = `https://api.foursquare.com/v2/venues/search?ll=${latlng}` +
     '&client_id=' + client_id + '&client_secret=' + client_secret + '&v=20161125';
-    var venue_photo_url = 'https://api.foursquare.com/v2/venues/{{venue_id}}' +
+    var venuePhotoUrl = 'https://api.foursquare.com/v2/venues/{{venue_id}}' +
     '/photos?client_id=' + client_id + '&client_secret=' + client_secret + '&v=20161125';
 
-    var venue_links_url = 'https://api.foursquare.com/v2/venues/{{venue_id}}' +
+    var venueLinksUrl = 'https://api.foursquare.com/v2/venues/{{venue_id}}' +
     '/links?client_id=' + client_id + '&client_secret=' + client_secret + '&v=20161125';
 
     var linksHref = '';
     //Ajax api call to fetch the venue information
     $.ajax({
-        url: venue_search_url
+        url: venueSearchUrl
     }).done(function(msg) {
         venues = msg.response.venues;
         venues.forEach(function(venue) {
             if (venue.name.toLowerCase() === self.businessName.toLowerCase()) {
-                venue_photo_url = venue_photo_url.replace(/{{venue_id}}/g, venue.id);
-                venue_links_url = venue_links_url.replace(/{{venue_id}}/g, venue.id);
+                venuePhotoUrl = venuePhotoUrl.replace(/{{venue_id}}/g, venue.id);
+                venueLinksUrl = venueLinksUrl.replace(/{{venue_id}}/g, venue.id);
                 contentString = '<div id="content">' +
                     '<div id="siteNotice">' +
                     '</div>' +
@@ -174,40 +174,41 @@ Location.prototype.buildInfo = function(marker) {
                     '<div style="color: grey; font-size: 14px;">' +
                     `${venue.categories[0].name}</div>` +
                     '<div id="bodyContent">';
-                //Ajax api call to fetch the photo_url and other information
+                //Ajax api call to fetch the photoUrl and other information
                 $.ajax({
-                    url: venue_photo_url
+                    url: venuePhotoUrl
                 }).done(function(msg) {
                     var photo = msg.response.photos.items[0];
-                    var photo_url = photo.prefix + picSize + photo.suffix;
-                    var photoHtml = `<img src="${photo_url}" alt="restaurant pic" /><br /><br />`;
+                    var photoUrl = photo.prefix + picSize + photo.suffix;
+                    var photoHtml = `<img src="${photoUrl}" alt="restaurant pic" /><br><br>`;
                     infowindow.setContent(contentString + photoHtml);
-                    self.getVenueUrl(venue_links_url);
+                    self.getVenueUrl(venueLinksUrl);
                 }).fail(function(jqXHR, exception) {
                     self.failInfoWindow();
                 });
             }
-        })
+        });
     }).fail(function(jqXHR, exception) {
         self.failInfoWindow();
     });
 
-    this.getVenueUrl = function(venue_links_url) {
+    this.getVenueUrl = function(venueLinksUrl) {
         $.ajax({
-            url: venue_links_url
+            url: venueLinksUrl
         }).done( function(msg){
-            var links = msg.response.links.items
+            var links = msg.response.links.items;
             if (links.length) {
                 linksHref = `<div><a href=${links[0].url}>${links[0].url}</a></div>`;
             } else {
                 linksHref = "<strong>No links available for this location</strong>";
             }
-            infowindow.setContent(infowindow.getContent() + linksHref + '</div></div>');
+            infowindow.setContent(infowindow.getContent() + linksHref +
+            '</div><br><strong>Powered by Foursquare API</strong></div>');
             self.openInfoWindow();
         }).fail( function (jqXHR, exception) {
             self.failInfoWindow();
         });
-    }
+    };
 
     // Show the user an error message incase the api call fails
     this.failInfoWindow = function() {
@@ -217,17 +218,17 @@ Location.prototype.buildInfo = function(marker) {
             `<h3 id="firstHeading" class="firstHeading">${self.businessName}</h3>` +
             '<div id="bodyContent">' +
             '<strong style="color:red;">' +
-            'Something went wrong, please try again later</strong>'
-        '</div>' +
-        '</div>';
+            'Something went wrong, please try again later</strong>' +
+            '</div></div>';
+        infowindow.setContent(contentString);
         self.openInfoWindow();
-    }
+    };
 
     // Show the user successful content about the locations
     this.openInfoWindow = function() {
         infowindow.open(map, self.marker, self);
-    }
-}
+    };
+};
 
 /**
  * Function ViewModel
@@ -236,11 +237,12 @@ Location.prototype.buildInfo = function(marker) {
  */
 function ViewModel() {
     var self = this;
+    this.locations = locations;
     this.setMapOnAll = function(map) {
         self.locationList().forEach(function(loc) {
             loc.marker.setMap(map);
         });
-    }
+    };
 
     // Show all the markers on the map by setting map object
     this.showMarkers = function() {
@@ -249,13 +251,13 @@ function ViewModel() {
             lng: -75.140
         });
         self.setMapOnAll(map);
-    }
+    };
 
     // Function to clear markers on the map by setting map to null on all markers
     this.clearMarkers = function() {
         self.setMapOnAll(null);
         markers = [];
-    }
+    };
 
     // Reset the markers and show all the markers on the map
     this.resetLocation = function() {
@@ -270,11 +272,14 @@ function ViewModel() {
         if (infowindow) {
             infowindow.close();
         }
+        resetMarkerIcon();
         toggleBounce(this.marker);
-        this.marker.setIcon
+        setGreenIcon(this.marker);
         this.buildInfo();
-    }
+    };
 
+    this.queryFilter = false;
+    this.radioFilter = false;
     this.locationList = ko.observableArray([]);
 
     this.resetLocation();
@@ -282,6 +287,7 @@ function ViewModel() {
     this.filter = ko.observable('All');
     // category filter radio buttons, updates view when selected
     this.filter.subscribe(function(value) {
+        self.radioFilter = true;
         if (value !== 'All') {
             self.clearMarkers();
             self.locationList.removeAll();
@@ -298,6 +304,7 @@ function ViewModel() {
 
     // Live search queries and updating view with the filter
     this.query.subscribe(function(value) {
+        self.queryFilter = true;
         self.clearMarkers();
         self.locationList.removeAll();
         locations.forEach(function(loc) {
@@ -318,7 +325,7 @@ function toggleBounce(marker) {
         marker.setAnimation(google.maps.Animation.BOUNCE);
         setTimeout(function() {
             marker.setAnimation(null);
-        }, 2500)
+        }, 1400);
     }
 }
 
@@ -326,7 +333,7 @@ function toggleBounce(marker) {
 function resetMarkerIcon(){
     markers.forEach(function (marker) {
         marker.setIcon(redIconUrl);
-    })
+    });
 }
 
 // Set marker icon to green when someone clicks on it
