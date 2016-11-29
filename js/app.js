@@ -240,6 +240,10 @@ function ViewModel() {
     var self = this;
     // Reset the markers and show all the markers on the map
     this.resetLocation = function() {
+        map.setCenter({
+            lat: 39.953,
+            lng: -75.140
+        });
         locations.forEach(function(data) {
             self.locationList.push(new Location(data));
         }, this);
@@ -261,51 +265,33 @@ function ViewModel() {
     this.resetLocation();
     this.query = ko.observable('');
     this.filter = ko.observable('All');
+    var locationList = [];
     this.filterLocations = ko.pureComputed( function () {
-        var locationList = self.locationList();
-
-        if (self.filter() === 'All' && self.query() === '') {
-            return self.locationList();
-        } else if (self.filter() !== 'All' && self.query() === ''){
-            return ko.utils.arrayFilter(locationList, function(loc) {
+        locationList = self.locationList();
+        if (self.filter() !== 'All'){
+            locationList = ko.utils.arrayFilter(locationList, function(loc) {
                 return loc.category === self.filter();
             });
         }
 
-        if (self.query() !== ''){
-            return ko.utils.arrayFilter(locationList, function(loc) {
-                return loc.businessName.toLowerCase().indexOf(self.query().toLowerCase()) >= 0;
+        if (self.query()){
+            locationList =  ko.utils.arrayFilter(locationList, function(loc) {
+                return (loc.businessName.toLowerCase().indexOf(self.query().toLowerCase()) >= 0);
             });
         }
 
-        // if (self.query() !== '' || self.filter() !== 'All'){
-        //     self.locationList().forEach( function(loc){
-        //         loc.marker.setVisible(false);
-        //     });
-        //     locationList.forEach(function(loc){
-        //         loc.marker.setVisible(true);
-        //     });
-        // }
+        return locationList;
+    }, this);
 
+
+    this.filterLocations.subscribe(function(locationList){
+            self.locationList().forEach( function(loc){
+                loc.marker.setVisible(false);
+            });
+            locationList.forEach(function(loc){
+                loc.marker.setVisible(true);
+            });
     });
-
-    // this.filterLocations().forEach( function(loc) {
-    //     loc.marker.setVisible(true);
-    // });
-
-    // // Live search queries and updating view with the filter
-    // this.query.subscribe(function(value) {
-    //     self.queryFilter = true;
-    //     self.clearMarkers();
-    //     self.locationList.removeAll();
-    //     locations.forEach(function(loc) {
-    //         if (loc.businessName.toLowerCase().indexOf(value.toLowerCase()) >= 0 ||
-    //             loc.address.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
-    //             self.locationList.push(new Location(loc));
-    //         }
-    //     });
-    //     self.showMarkers();
-    // });
 }
 
 // Toggle bounce for the markers when location is selected from the sidebar
@@ -318,6 +304,11 @@ function toggleBounce(marker) {
             marker.setAnimation(null);
         }, 1400);
     }
+}
+
+// Google Maps Error Handling
+function mapFallback(){
+    $('#map').html('<h1> Sorry Unable To Load Google Maps Please Try Later</h1>');
 }
 
 // Reset marker icons to default one
