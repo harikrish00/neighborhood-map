@@ -124,6 +124,7 @@ var Location = function(data) {
         setGreenIcon(this);
         self.buildInfo();
     });
+    this.marker.setVisible(true);
     markers.push(this.marker);
     //Glyphicon classes computed dynamically
     this.glyphicon = ko.computed(function() {
@@ -237,34 +238,11 @@ Location.prototype.buildInfo = function(marker) {
  */
 function ViewModel() {
     var self = this;
-    this.locations = locations;
-    this.setMapOnAll = function(map) {
-        self.locationList().forEach(function(loc) {
-            loc.marker.setMap(map);
-        });
-    };
-
-    // Show all the markers on the map by setting map object
-    this.showMarkers = function() {
-        map.setCenter({
-            lat: 39.953,
-            lng: -75.140
-        });
-        self.setMapOnAll(map);
-    };
-
-    // Function to clear markers on the map by setting map to null on all markers
-    this.clearMarkers = function() {
-        self.setMapOnAll(null);
-        markers = [];
-    };
-
     // Reset the markers and show all the markers on the map
     this.resetLocation = function() {
         locations.forEach(function(data) {
             self.locationList.push(new Location(data));
         }, this);
-        self.showMarkers();
     };
 
     // Upon selecting the location from the sidebar, show info window and animation
@@ -278,43 +256,56 @@ function ViewModel() {
         this.buildInfo();
     };
 
-    this.queryFilter = false;
-    this.radioFilter = false;
     this.locationList = ko.observableArray([]);
 
     this.resetLocation();
     this.query = ko.observable('');
     this.filter = ko.observable('All');
-    // category filter radio buttons, updates view when selected
-    this.filter.subscribe(function(value) {
-        self.radioFilter = true;
-        if (value !== 'All') {
-            self.clearMarkers();
-            self.locationList.removeAll();
-            locations.forEach(function(loc) {
-                if (loc.category.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
-                    self.locationList.push(new Location(loc));
-                }
+    this.filterLocations = ko.pureComputed( function () {
+        var locationList = self.locationList();
+
+        if (self.filter() === 'All' && self.query() === '') {
+            return self.locationList();
+        } else if (self.filter() !== 'All' && self.query() === ''){
+            return ko.utils.arrayFilter(locationList, function(loc) {
+                return loc.category === self.filter();
             });
-            self.showMarkers();
-        } else {
-            self.resetLocation();
         }
+
+        if (self.query() !== ''){
+            return ko.utils.arrayFilter(locationList, function(loc) {
+                return loc.businessName.toLowerCase().indexOf(self.query().toLowerCase()) >= 0;
+            });
+        }
+
+        // if (self.query() !== '' || self.filter() !== 'All'){
+        //     self.locationList().forEach( function(loc){
+        //         loc.marker.setVisible(false);
+        //     });
+        //     locationList.forEach(function(loc){
+        //         loc.marker.setVisible(true);
+        //     });
+        // }
+
     });
 
-    // Live search queries and updating view with the filter
-    this.query.subscribe(function(value) {
-        self.queryFilter = true;
-        self.clearMarkers();
-        self.locationList.removeAll();
-        locations.forEach(function(loc) {
-            if (loc.businessName.toLowerCase().indexOf(value.toLowerCase()) >= 0 ||
-                loc.address.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
-                self.locationList.push(new Location(loc));
-            }
-        });
-        self.showMarkers();
-    });
+    // this.filterLocations().forEach( function(loc) {
+    //     loc.marker.setVisible(true);
+    // });
+
+    // // Live search queries and updating view with the filter
+    // this.query.subscribe(function(value) {
+    //     self.queryFilter = true;
+    //     self.clearMarkers();
+    //     self.locationList.removeAll();
+    //     locations.forEach(function(loc) {
+    //         if (loc.businessName.toLowerCase().indexOf(value.toLowerCase()) >= 0 ||
+    //             loc.address.toLowerCase().indexOf(value.toLowerCase()) >= 0) {
+    //             self.locationList.push(new Location(loc));
+    //         }
+    //     });
+    //     self.showMarkers();
+    // });
 }
 
 // Toggle bounce for the markers when location is selected from the sidebar

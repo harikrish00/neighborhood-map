@@ -52,7 +52,7 @@
             </label>
           </div>
         </div>
-        <ul data-bind="foreach: locationList" class="list-group" id="selectable">
+        <ul data-bind="foreach: filterLocations" class="list-group" id="selectable">
           <li class="list-group-item ui-widget-content" data-bind="click: $parent.showInfoWindow">
             <i data-bind="css: glyphicon"></i>
               <strong data-bind="text: businessName" class="locationHeading"></strong>
