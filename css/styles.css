@@ -32,6 +32,10 @@
 .map {
   height: 300px;
 }
+
+#selectable {
+  height:200px;
+}
 }
 
 #map {
